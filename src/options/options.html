@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MangeLa - Options</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌌 MangeLa Options</h1>
+
+      <form id="options-form">
+        <section class="section">
+          <h2>Sync Settings</h2>
+
+          <div class="form-group">
+            <label for="full-sync-interval">Full sync interval (hours)</label>
+            <select id="full-sync-interval" name="fullSyncInterval">
+              <option value="1">1 hour</option>
+              <option value="2">2 hours</option>
+              <option value="4">4 hours</option>
+              <option value="6">6 hours</option>
+              <option value="12">12 hours</option>
+              <option value="24">24 hours</option>
+            </select>
+            <p class="help">How often to do a complete sync of all data.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="incremental-interval">Incremental sync interval (minutes)</label>
+            <select id="incremental-interval" name="incrementalInterval">
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+            <p class="help">How often to check for new posts and engagements.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Data Retention</h2>
+
+          <div class="form-group">
+            <label for="posts-retention">Keep posts for (days)</label>
+            <select id="posts-retention" name="postsRetention">
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90">90 days</option>
+            </select>
+            <p class="help">Posts older than this will be deleted to save space.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="engagements-retention">Keep engagements for (days)</label>
+            <select id="engagements-retention" name="engagementsRetention">
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90">90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">365 days</option>
+            </select>
+            <p class="help">Engagement data (likes, replies, etc.) older than this will be deleted.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Notifications</h2>
+
+          <div class="form-group checkbox">
+            <input type="checkbox" id="notify-sync" name="notifySync" />
+            <label for="notify-sync">Notify when sync completes</label>
+          </div>
+
+          <div class="form-group checkbox">
+            <input type="checkbox" id="notify-errors" name="notifyErrors" checked />
+            <label for="notify-errors">Notify on sync errors</label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Data Management</h2>
+
+          <div class="button-group">
+            <button type="button" id="export-btn" class="btn btn-secondary">
+              📤 Export Data
+            </button>
+            <button type="button" id="clear-btn" class="btn btn-danger">
+              🗑️ Clear All Data
+            </button>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Options</button>
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </form>
+    </div>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

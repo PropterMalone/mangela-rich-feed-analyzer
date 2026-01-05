@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MangeLa - Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>🌌 MangeLa Dashboard</h1>
+        <div class="header-actions">
+          <select id="date-range" class="date-range-select">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <button id="refresh-btn" class="btn btn-primary">🔄 Refresh</button>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="overview">
+          <div class="stat-card">
+            <span class="stat-value" id="total-following">--</span>
+            <span class="stat-label">Following</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="total-followers">--</span>
+            <span class="stat-label">Followers</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="total-mutuals">--</span>
+            <span class="stat-label">Mutuals</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="total-posts">--</span>
+            <span class="stat-label">Posts in Universe</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="your-interactions">--</span>
+            <span class="stat-label">Your Interactions</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="received-engagements">--</span>
+            <span class="stat-label">Engagements Received</span>
+          </div>
+        </section>
+
+        <section class="insights">
+          <h2>Quick Insights</h2>
+          <div class="insights-grid">
+            <div class="insight-card" id="noise-insight">
+              <h3>🔊 Noise Alert</h3>
+              <p class="insight-content">Loading...</p>
+            </div>
+            <div class="insight-card" id="engagement-insight">
+              <h3>💬 Engagement</h3>
+              <p class="insight-content">Loading...</p>
+            </div>
+            <div class="insight-card" id="reciprocity-insight">
+              <h3>↔️ Reciprocity</h3>
+              <p class="insight-content">Loading...</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="user-explorer">
+          <h2>User Explorer</h2>
+          <div class="explorer-controls">
+            <input type="text" id="search-users" placeholder="Search by handle..." class="search-input" />
+            <select id="filter-relationship" class="filter-select">
+              <option value="all">All relationships</option>
+              <option value="mutual">Mutuals only</option>
+              <option value="following">Following only</option>
+              <option value="followers">Followers only</option>
+            </select>
+            <select id="sort-by" class="filter-select">
+              <option value="volume">Sort by volume</option>
+              <option value="noise">Sort by noise</option>
+              <option value="engagement">Sort by engagement</option>
+              <option value="reciprocity">Sort by reciprocity</option>
+            </select>
+          </div>
+          <div class="user-table-container">
+            <table class="user-table" id="user-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Relationship</th>
+                  <th>Posts</th>
+                  <th>Your Likes</th>
+                  <th>Their Likes</th>
+                  <th>Noise Score</th>
+                  <th>Reciprocity</th>
+                </tr>
+              </thead>
+              <tbody id="user-table-body">
+                <tr>
+                  <td colspan="7" class="placeholder">Sync data to see users...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button id="prev-page" class="btn btn-secondary" disabled>← Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" class="btn btn-secondary" disabled>Next →</button>
+          </div>
+        </section>
+
+        <section class="unfollow-candidates">
+          <h2>🤔 Unfollow Candidates</h2>
+          <p class="section-description">
+            Accounts with high noise score (lots of posts, little engagement from you) that you might consider unfollowing.
+          </p>
+          <div class="candidate-list" id="unfollow-candidates">
+            <p class="placeholder">Sync data to see suggestions...</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>
+          <button id="export-csv" class="btn btn-secondary">📥 Export to CSV</button>
+        </p>
+        <p class="footer-note">Last updated: <span id="last-updated">Never</span></p>
+      </footer>
+    </div>
+
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>
