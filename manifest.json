@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "MangeLa Rich Feed Analyzer",
+  "version": "0.1.0",
+  "description": "Understand your Bluesky Universe - who contributes to your feed, engagement patterns, and noise detection",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": [
+    "https://bsky.app/*",
+    "https://bsky.social/*",
+    "https://*.bsky.network/*",
+    "https://public.api.bsky.app/*"
+  ],
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://bsky.app/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": false
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MangeLa Rich Feed Analyzer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>🌌 MangeLa</h1>
+        <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+      </header>
+
+      <main class="main">
+        <section class="sync-status" id="sync-status">
+          <div class="status-row">
+            <span class="status-label">Status:</span>
+            <span class="status-value" id="status-value">Loading...</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Last sync:</span>
+            <span class="status-value" id="last-sync">Never</span>
+          </div>
+          <button id="sync-btn" class="btn btn-primary">🔄 Sync Now</button>
+        </section>
+
+        <section class="summary" id="summary">
+          <h2>Summary</h2>
+          <div class="stats-grid">
+            <div class="stat">
+              <span class="stat-value" id="following-count">--</span>
+              <span class="stat-label">Following</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="followers-count">--</span>
+              <span class="stat-label">Followers</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="mutuals-count">--</span>
+              <span class="stat-label">Mutuals</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="posts-count">--</span>
+              <span class="stat-label">Posts</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="tabs">
+          <div class="tab-bar">
+            <button class="tab active" data-tab="contributors">Top Contributors</button>
+            <button class="tab" data-tab="noise">Noise</button>
+            <button class="tab" data-tab="engagement">Engagement</button>
+          </div>
+          <div class="tab-content" id="tab-content">
+            <p class="placeholder">Sync to see analytics...</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <button id="dashboard-btn" class="btn btn-secondary">📈 Full Dashboard</button>
+      </footer>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
