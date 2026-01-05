@@ -12,6 +12,8 @@ const DEFAULT_OPTIONS = {
   incrementalInterval: 15, // minutes
   postsRetention: 30, // days
   engagementsRetention: 90, // days
+  noiseThreshold: 0.7, // 0.0 to 1.0
+  reciprocityThreshold: 0.3, // 0.0 to 1.0
   notifySync: false,
   notifyErrors: true,
 };
@@ -58,6 +60,27 @@ async function populateForm() {
     options.engagementsRetention
   );
 
+  // Set range sliders
+  const noiseSlider = document.getElementById('noise-threshold') as HTMLInputElement;
+  const reciprocitySlider = document.getElementById('reciprocity-threshold') as HTMLInputElement;
+  const noiseValue = document.getElementById('noise-threshold-value') as HTMLSpanElement;
+  const reciprocityValue = document.getElementById('reciprocity-threshold-value') as HTMLSpanElement;
+
+  noiseSlider.value = String(options.noiseThreshold);
+  reciprocitySlider.value = String(options.reciprocityThreshold);
+  noiseValue.textContent = (options.noiseThreshold * 100).toFixed(0);
+  reciprocityValue.textContent = (options.reciprocityThreshold * 100).toFixed(0);
+
+  // Update sliders on change
+  noiseSlider.addEventListener('input', (e) => {
+    const val = (e.target as HTMLInputElement).value;
+    noiseValue.textContent = (parseFloat(val) * 100).toFixed(0);
+  });
+  reciprocitySlider.addEventListener('input', (e) => {
+    const val = (e.target as HTMLInputElement).value;
+    reciprocityValue.textContent = (parseFloat(val) * 100).toFixed(0);
+  });
+
   // Set checkboxes
   (document.getElementById('notify-sync') as HTMLInputElement).checked = options.notifySync;
   (document.getElementById('notify-errors') as HTMLInputElement).checked = options.notifyErrors;
@@ -77,6 +100,12 @@ function getFormOptions(): Options {
     ),
     engagementsRetention: parseInt(
       (document.getElementById('engagements-retention') as HTMLSelectElement).value
+    ),
+    noiseThreshold: parseFloat(
+      (document.getElementById('noise-threshold') as HTMLInputElement).value
+    ),
+    reciprocityThreshold: parseFloat(
+      (document.getElementById('reciprocity-threshold') as HTMLInputElement).value
     ),
     notifySync: (document.getElementById('notify-sync') as HTMLInputElement).checked,
     notifyErrors: (document.getElementById('notify-errors') as HTMLInputElement).checked,
