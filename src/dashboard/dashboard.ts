@@ -11,6 +11,7 @@ import {
   getFollowers,
   getMutuals,
 } from '../db/index.js';
+import { getAnalytics, getNoiseOutliers } from '../analytics/index.js';
 
 console.log('[Universe] Dashboard loaded');
 
@@ -75,7 +76,11 @@ async function loadStats() {
 // Load insights
 async function loadInsights() {
   try {
-    const profiles = await getAllProfiles();
+    const [profiles, analytics, noiseAccounts] = await Promise.all([
+      getAllProfiles(),
+      getAnalytics(),
+      getNoiseOutliers(0.7),
+    ]);
 
     if (profiles.length === 0) {
       noiseInsight.textContent = 'No data yet. Run a sync to see insights.';
@@ -84,13 +89,23 @@ async function loadInsights() {
       return;
     }
 
-    // Placeholder insights (will be computed from actual data later)
     const mutuals = profiles.filter((p) => p.isMutual);
     const mutualPercent = Math.round((mutuals.length / profiles.length) * 100);
+    const followingCount = profiles.filter((p) => p.youFollow).length;
 
-    noiseInsight.textContent = `Sync to identify noisy accounts in your feed.`;
-    engagementInsight.textContent = `You're following ${profiles.filter((p) => p.youFollow).length} accounts.`;
-    reciprocityInsight.textContent = `${mutualPercent}% of your follows are mutual.`;
+    let noiseMsg = `You have ${noiseAccounts.length} potential noise account${noiseAccounts.length !== 1 ? 's' : ''}.`;
+    if (noiseAccounts.length === 0) {
+      noiseMsg = 'Your feed looks clean! No high-noise accounts detected.';
+    } else if (noiseAccounts.length === 1) {
+      noiseMsg = `1 account posts frequently but you rarely engage with it.`;
+    } else {
+      const topNoise = noiseAccounts[0];
+      noiseMsg = `${topNoise.handle} is your noisiest account (${(topNoise.score * 100).toFixed(0)}% noise score).`;
+    }
+
+    noiseInsight.textContent = noiseMsg;
+    engagementInsight.textContent = `You're following ${followingCount} accounts. You engage with ~${((analytics.noiseScores.reduce((sum, s) => sum + s.engagementRate, 0) / analytics.noiseScores.length) * 100).toFixed(0)}% of posts on average.`;
+    reciprocityInsight.textContent = `${mutualPercent}% of your follows are mutual. Out of ${analytics.totalContributors} contributors, ${mutuals.length} are mutual follows.`;
   } catch (error) {
     console.error('[Universe] Failed to load insights:', error);
   }
@@ -99,7 +114,10 @@ async function loadInsights() {
 // Load user table
 async function loadUserTable() {
   try {
-    const profiles = await getAllProfiles();
+    const [profiles, analytics] = await Promise.all([
+      getAllProfiles(),
+      getAnalytics(),
+    ]);
 
     if (profiles.length === 0) {
       userTableBody.innerHTML = `
@@ -110,13 +128,24 @@ async function loadUserTable() {
       return;
     }
 
-    // Sort by handle for now (will be replaced with actual sorting)
-    const sorted = profiles.slice().sort((a, b) => a.handle.localeCompare(b.handle));
+    // Create lookup maps for scores
+    const noiseScoreMap = new Map(analytics.noiseScores.map((s) => [s.did, s]));
+    const reciprocityMap = new Map(analytics.reciprocityScores.map((s) => [s.did, s]));
+
+    // Sort by posts descending (top contributors first)
+    const sorted = profiles.slice().sort((a, b) => {
+      const aScore = noiseScoreMap.get(a.did)?.postCount || 0;
+      const bScore = noiseScoreMap.get(b.did)?.postCount || 0;
+      return bScore - aScore;
+    });
     const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     userTableBody.innerHTML = paginated
-      .map(
-        (profile) => `
+      .map((profile) => {
+        const noise = noiseScoreMap.get(profile.did);
+        const reciprocity = reciprocityMap.get(profile.did);
+
+        return `
       <tr>
         <td>
           <div class="user-info">
@@ -132,14 +161,14 @@ async function loadUserTable() {
             ${profile.isMutual ? 'Mutual' : profile.youFollow ? 'Following' : 'Follower'}
           </span>
         </td>
-        <td>--</td>
-        <td>--</td>
-        <td>--</td>
-        <td><span class="score">--</span></td>
-        <td><span class="score">--</span></td>
+        <td>${noise?.postCount || 0}</td>
+        <td>${(noise?.engagementRate ? (noise.engagementRate * 100).toFixed(0) : 0)}%</td>
+        <td>${reciprocity?.yourEngagement || 0}</td>
+        <td><span class="score ${getNoiseScoreClass(noise?.score || 0)}">${noise ? (noise.score * 100).toFixed(0) : '--'}%</span></td>
+        <td><span class="score">${reciprocity ? (reciprocity.score * 100).toFixed(0) : '--'}%</span></td>
       </tr>
-    `
-      )
+    `;
+      })
       .join('');
 
     // Update pagination
@@ -152,12 +181,44 @@ async function loadUserTable() {
   }
 }
 
+function getNoiseScoreClass(score: number): string {
+  if (score > 0.7) return 'score-high';
+  if (score > 0.4) return 'score-medium';
+  return 'score-low';
+}
+
 // Load unfollow candidates
 async function loadUnfollowCandidates() {
-  // Placeholder - will compute from noise scores
-  unfollowCandidates.innerHTML = `
-    <p class="placeholder">Sync more data to generate recommendations...</p>
-  `;
+  try {
+    const outliers = await getNoiseOutliers(0.7);
+    if (outliers.length === 0) {
+      unfollowCandidates.innerHTML = `<p class="placeholder">No unfollow candidates. Your feed looks good!</p>`;
+      return;
+    }
+
+    const candidates = outliers
+      .filter((s) => !s.isMutual) // Don't unfollow mutuals
+      .slice(0, 5);
+
+    let html = '<div class="candidate-list">';
+    for (const candidate of candidates) {
+      html += `
+        <div class="candidate-card">
+          <div class="candidate-handle">@${candidate.handle}</div>
+          <div class="candidate-reason">
+            <span>${candidate.postCount} posts</span>
+            <span>${(candidate.engagementRate * 100).toFixed(0)}% engagement</span>
+            <span>Noise: ${(candidate.score * 100).toFixed(0)}%</span>
+          </div>
+        </div>
+      `;
+    }
+    html += '</div>';
+    unfollowCandidates.innerHTML = html;
+  } catch (error) {
+    console.error('[Universe] Failed to load unfollow candidates:', error);
+    unfollowCandidates.innerHTML = `<p class="placeholder">Error loading recommendations. Try refreshing.</p>`;
+  }
 }
 
 // Setup event listeners

@@ -3,6 +3,8 @@
  */
 
 import { countProfiles, countPosts, getMutuals, getFollowing, getFollowers } from '../db/index.js';
+import { getAnalytics, getNoiseOutliers, getNonReciprocal } from '../analytics/index.js';
+import type { NoiseScore, ReciprocityScore } from '../analytics/index.js';
 
 console.log('[Universe] Popup loaded');
 
@@ -136,20 +138,107 @@ function switchTab(tab: string) {
 }
 
 // Render tab content
-function renderTabContent(tab: string) {
-  switch (tab) {
-    case 'contributors':
-      tabContent.innerHTML = '<p class="placeholder">Top contributors will appear here after syncing...</p>';
-      break;
-    case 'noise':
-      tabContent.innerHTML = '<p class="placeholder">High-volume, low-engagement accounts will appear here...</p>';
-      break;
-    case 'engagement':
-      tabContent.innerHTML = '<p class="placeholder">Your most engaged-with accounts will appear here...</p>';
-      break;
-    default:
-      tabContent.innerHTML = '<p class="placeholder">Unknown tab</p>';
+async function renderTabContent(tab: string) {
+  try {
+    switch (tab) {
+      case 'contributors':
+        await renderContributors();
+        break;
+      case 'noise':
+        await renderNoise();
+        break;
+      case 'engagement':
+        await renderEngagement();
+        break;
+      default:
+        tabContent.innerHTML = '<p class="placeholder">Unknown tab</p>';
+    }
+  } catch (error) {
+    console.error('[Universe] Tab render error:', error);
+    tabContent.innerHTML = '<p class="error">Failed to load data</p>';
   }
+}
+
+async function renderContributors() {
+  const analytics = await getAnalytics();
+  if (analytics.noiseScores.length === 0) {
+    tabContent.innerHTML = '<p class="placeholder">No data yet. Sync to analyze your feed...</p>';
+    return;
+  }
+
+  // Sort by post count descending
+  const sorted = [...analytics.noiseScores].sort((a, b) => b.postCount - a.postCount).slice(0, 10);
+
+  let html = '<div class="user-list">';
+  for (const user of sorted) {
+    html += `
+      <div class="user-item">
+        <div class="user-name">${escapeHtml(user.handle)}</div>
+        <div class="user-stats">
+          <span class="stat">${user.postCount} posts</span>
+          <span class="stat">${(user.engagementRate * 100).toFixed(0)}% engaged</span>
+        </div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  tabContent.innerHTML = html;
+}
+
+async function renderNoise() {
+  const outliers = await getNoiseOutliers(0.7);
+  if (outliers.length === 0) {
+    tabContent.innerHTML = '<p class="placeholder">No high-noise accounts detected. Your feed is clean!</p>';
+    return;
+  }
+
+  let html = '<div class="user-list">';
+  for (const user of outliers.slice(0, 10)) {
+    html += `
+      <div class="user-item">
+        <div class="user-name">${escapeHtml(user.handle)}</div>
+        <div class="user-stats">
+          <span class="stat">Noise: ${(user.score * 100).toFixed(0)}%</span>
+          <span class="stat">${user.postCount} posts</span>
+          <span class="stat">${(user.engagementRate * 100).toFixed(0)}% engaged</span>
+        </div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  tabContent.innerHTML = html;
+}
+
+async function renderEngagement() {
+  const analytics = await getAnalytics();
+  const reciprocity = analytics.reciprocityScores.slice(0, 10);
+
+  if (reciprocity.length === 0) {
+    tabContent.innerHTML = '<p class="placeholder">No engagement data yet. Sync to see interactions...</p>';
+    return;
+  }
+
+  let html = '<div class="user-list">';
+  for (const user of reciprocity) {
+    const direction = user.yourEngagement > user.theirEngagement ? '→' : user.theirEngagement > user.yourEngagement ? '←' : '↔';
+    html += `
+      <div class="user-item">
+        <div class="user-name">${escapeHtml(user.handle)}</div>
+        <div class="user-stats">
+          <span class="stat">${user.yourEngagement}${direction}${user.theirEngagement}</span>
+          <span class="stat">${user.balanced ? 'Balanced' : 'One-way'}</span>
+        </div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  tabContent.innerHTML = html;
+}
+
+function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 // Format relative time
